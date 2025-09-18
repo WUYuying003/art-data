@@ -9,6 +9,10 @@ import math
 import sys
 import csv
 import random
+import cv2
+import numpy as np
+import os
+from datetime import datetime
 from typing import List, Dict, Tuple, Optional
 
 # Global settings
@@ -344,6 +348,13 @@ class InteractiveFlowerApp:
         self.color_schemes = list(self.visualizer.get_enhanced_color_schemes().keys())
         self.selected_color_index = 0
         self.custom_color_mode = False  # False = auto colors, True = manual color selection
+        
+        # Video recording
+        self.is_recording = False
+        self.video_writer = None
+        self.video_frames = []
+        self.recording_duration = 300  # 5 seconds at 60 FPS
+        self.recording_frame_count = 0
     
     def handle_events(self):
         """Handle user input events"""
@@ -394,6 +405,10 @@ class InteractiveFlowerApp:
                     # 2 key: next color scheme
                     if self.custom_color_mode:
                         self.next_color_scheme()
+                
+                elif event.key == pygame.K_v:
+                    # V key: start/stop video recording
+                    self.toggle_video_recording()
         
         return True
     
@@ -472,6 +487,75 @@ class InteractiveFlowerApp:
         if self.custom_color_mode:
             return self.color_schemes[self.selected_color_index]
         return None
+    
+    def toggle_video_recording(self):
+        """Start or stop video recording"""
+        if not self.is_recording:
+            self.start_video_recording()
+        else:
+            self.stop_video_recording()
+    
+    def start_video_recording(self):
+        """Start recording video"""
+        self.is_recording = True
+        self.video_frames = []
+        self.recording_frame_count = 0
+        print("Video recording started...")
+    
+    def stop_video_recording(self):
+        """Stop recording and save video"""
+        if not self.is_recording:
+            return
+        
+        self.is_recording = False
+        
+        if len(self.video_frames) == 0:
+            print("No frames to save")
+            return
+        
+        # Create videos directory if it doesn't exist
+        if not os.path.exists("videos"):
+            os.makedirs("videos")
+        
+        # Generate filename with timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        current_sample = self.iris_data.get_sample_by_index(self.current_sample_index)
+        species_name = current_sample['species'].replace('Iris-', '') if current_sample else "unknown"
+        sample_id = current_sample['id'] if current_sample else 0
+        
+        filename = f"videos/iris_flower_{species_name}_sample{sample_id}_{timestamp}.mp4"
+        
+        # Video settings
+        fps = 30  # Reduce to 30 FPS for better compatibility
+        height, width = self.video_frames[0].shape[:2]
+        
+        # Create video writer
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        video_writer = cv2.VideoWriter(filename, fourcc, fps, (width, height))
+        
+        # Write frames
+        for frame in self.video_frames:
+            # Convert from RGB to BGR for OpenCV
+            frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+            video_writer.write(frame_bgr)
+        
+        video_writer.release()
+        print(f"Video saved as: {filename}")
+        print(f"Recorded {len(self.video_frames)} frames ({len(self.video_frames)/fps:.1f} seconds)")
+    
+    def capture_frame(self):
+        """Capture current frame for video recording"""
+        if self.is_recording:
+            # Convert pygame surface to numpy array
+            frame_data = pygame.surfarray.array3d(self.screen)
+            # Transpose to get correct orientation (pygame uses (width, height, channels))
+            frame_data = np.transpose(frame_data, (1, 0, 2))
+            self.video_frames.append(frame_data)
+            self.recording_frame_count += 1
+            
+            # Auto-stop after recording_duration frames
+            if self.recording_frame_count >= self.recording_duration:
+                self.stop_video_recording()
     
     def draw_ui(self, screen):
         """Draw user interface"""
@@ -576,7 +660,8 @@ class InteractiveFlowerApp:
                 "R: Random Sample",
                 "A: Auto Advance",
                 "C: Toggle Color Mode",
-                "1/2: Change Color Theme"
+                "1/2: Change Color Theme",
+                "V: Record Video (5s)"
             ]
             
             for i, control in enumerate(controls):
@@ -592,10 +677,14 @@ class InteractiveFlowerApp:
                 status_items.append("PAUSED")
             if self.auto_advance:
                 status_items.append("AUTO")
+            if self.is_recording:
+                progress = (self.recording_frame_count / self.recording_duration) * 100
+                status_items.append(f"RECORDING {progress:.0f}%")
             
             if status_items:
                 status_text = " | ".join(status_items)
-                status_surface = self.font.render(status_text, True, (255, 255, 0))
+                status_color = (255, 0, 0) if self.is_recording else (255, 255, 0)
+                status_surface = self.font.render(status_text, True, status_color)
                 screen.blit(status_surface, (WIDTH - 290, y_offset))
     
     def run(self):
@@ -624,11 +713,19 @@ class InteractiveFlowerApp:
             # Draw UI
             self.draw_ui(self.screen)
             
+            # Capture frame for video recording if recording
+            self.capture_frame()
+            
             # Update display
             pygame.display.flip()
             self.clock.tick(FPS)
         
         pygame.quit()
+        
+        # Clean up any ongoing recording
+        if self.is_recording:
+            self.stop_video_recording()
+        
         sys.exit()
 
 def main():

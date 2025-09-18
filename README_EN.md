@@ -23,6 +23,9 @@ An artistic and interactive visualization system that transforms the classic Iri
 - **↑/↓**: Switch between species filters
 - **R**: Jump to random sample
 - **A**: Toggle auto-advance mode
+- **C**: Toggle between Auto color mode and Manual color selection
+- **1/2**: Switch between color themes (when in Manual mode)
+- **V**: Start/Stop video recording (5 seconds)
 
 ### Real-time Information Display
 - Current sample ID and species
@@ -44,7 +47,7 @@ Each flower represents a unique iris sample with:
 
 ### Prerequisites
 ```bash
-pip install pygame
+pip install pygame opencv-python numpy
 ```
 
 ### Running the Application
@@ -104,11 +107,28 @@ This project demonstrates:
 
 ## 🎯 Future Enhancements
 
-- Export functionality for high-resolution flower images
+- ~~Export functionality for high-resolution flower images~~ ✅ **COMPLETED: Video Export**
 - Comparative view showing multiple species simultaneously
 - Statistical overlays showing distribution patterns
 - 3D flower rendering for enhanced visual impact
 - Sound generation based on data patterns
+
+## 🎬 Video Export Feature
+
+The application now includes a powerful video recording feature:
+
+- **Press V** to start recording a 5-second video of the current flower animation
+- **Recording Progress** is displayed in the status bar with a red indicator
+- **Auto-stop** after 5 seconds (300 frames at 60 FPS, exported at 30 FPS)
+- **Smart Naming**: Videos are automatically named with species, sample ID, and timestamp
+- **Output Format**: MP4 videos saved in the `videos/` directory
+- **Example filename**: `iris_flower_setosa_sample1_20250918_171234.mp4`
+
+Perfect for:
+- Creating presentations about data visualization
+- Sharing specific flower animations on social media
+- Building a library of all 150 unique iris flower animations
+- Demonstrating the relationship between data and visual output
 
 ---
 
