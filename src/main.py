@@ -108,25 +108,78 @@ class FlowerVisualizer:
         """Get color scheme based on iris species"""
         color_schemes = {
             'Iris-setosa': {
-                'primary': (0, 120, 200),    # Ocean blue
-                'secondary': (20, 140, 220),  # Light ocean blue
-                'accent': (40, 160, 240),     # Bright blue
-                'highlight': (100, 200, 255)  # Bright blue-white
+                'primary': (30, 144, 255),    # Dodger blue
+                'secondary': (0, 191, 255),   # Deep sky blue
+                'accent': (135, 206, 250),    # Light sky blue
+                'highlight': (173, 216, 230)  # Light blue
             },
             'Iris-versicolor': {
-                'primary': (0, 180, 140),     # Teal
-                'secondary': (20, 200, 160),  # Light teal
-                'accent': (40, 220, 180),     # Bright teal
-                'highlight': (100, 240, 200)  # Bright teal-white
+                'primary': (0, 206, 209),     # Dark turquoise
+                'secondary': (64, 224, 208),  # Turquoise
+                'accent': (72, 209, 204),     # Medium turquoise
+                'highlight': (175, 238, 238)  # Pale turquoise
             },
             'Iris-virginica': {
-                'primary': (160, 0, 120),     # Purple-magenta
-                'secondary': (180, 20, 140),  # Light purple-magenta
-                'accent': (200, 40, 160),     # Bright purple-magenta
-                'highlight': (220, 100, 200)  # Bright purple-white
+                'primary': (138, 43, 226),    # Blue violet
+                'secondary': (148, 0, 211),   # Dark violet
+                'accent': (186, 85, 211),     # Medium orchid
+                'highlight': (221, 160, 221)  # Plum
             }
         }
         return color_schemes.get(species, color_schemes['Iris-setosa'])
+    
+    def get_enhanced_color_schemes(self) -> Dict[str, Dict[str, Tuple[int, int, int]]]:
+        """Get all enhanced color schemes for UI selection"""
+        return {
+            'Ocean Blues': {
+                'primary': (30, 144, 255),    # Dodger blue
+                'secondary': (0, 191, 255),   # Deep sky blue
+                'accent': (135, 206, 250),    # Light sky blue
+                'highlight': (173, 216, 230)  # Light blue
+            },
+            'Sunset Orange': {
+                'primary': (255, 69, 0),      # Red orange
+                'secondary': (255, 140, 0),   # Dark orange
+                'accent': (255, 165, 0),      # Orange
+                'highlight': (255, 218, 185)  # Peach puff
+            },
+            'Forest Green': {
+                'primary': (34, 139, 34),     # Forest green
+                'secondary': (0, 128, 0),     # Green
+                'accent': (144, 238, 144),    # Light green
+                'highlight': (240, 255, 240)  # Honeydew
+            },
+            'Royal Purple': {
+                'primary': (75, 0, 130),      # Indigo
+                'secondary': (138, 43, 226),  # Blue violet
+                'accent': (186, 85, 211),     # Medium orchid
+                'highlight': (238, 130, 238)  # Violet
+            },
+            'Rose Pink': {
+                'primary': (220, 20, 60),     # Crimson
+                'secondary': (255, 20, 147),  # Deep pink
+                'accent': (255, 105, 180),    # Hot pink
+                'highlight': (255, 182, 193)  # Light pink
+            },
+            'Golden Yellow': {
+                'primary': (255, 215, 0),     # Gold
+                'secondary': (255, 165, 0),   # Orange
+                'accent': (255, 255, 0),      # Yellow
+                'highlight': (255, 255, 224)  # Light yellow
+            },
+            'Deep Teal': {
+                'primary': (0, 128, 128),     # Teal
+                'secondary': (0, 206, 209),   # Dark turquoise
+                'accent': (64, 224, 208),     # Turquoise
+                'highlight': (175, 238, 238)  # Pale turquoise
+            },
+            'Cosmic Purple': {
+                'primary': (72, 61, 139),     # Dark slate blue
+                'secondary': (123, 104, 238), # Medium slate blue
+                'accent': (147, 112, 219),    # Medium purple
+                'highlight': (230, 230, 250)  # Lavender
+            }
+        }
     
     def map_data_to_visual(self, iris_sample: Dict) -> Dict:
         """Map iris data to visual parameters"""
@@ -138,10 +191,25 @@ class FlowerVisualizer:
             'num_petals': 16 + int(normalized['sepal_width'] * 16),     # Sepal width → Number of petals
             'amplitude': 20 + int(normalized['petal_length'] * 60),     # Petal length → Dynamic amplitude
             'num_layers': 6 + int(normalized['petal_width'] * 12),      # Petal width → Number of layers
-            'species': iris_sample['species']
+            'species': iris_sample['species'],
+            # Add unique color variation based on sample ID
+            'color_variation': (iris_sample['id'] * 37) % 8  # Creates 8 different color variations
         }
         
         return visual_params
+    
+    def get_sample_color_scheme(self, iris_sample: Dict, custom_scheme: str = None) -> Dict[str, Tuple[int, int, int]]:
+        """Get color scheme for a specific sample, with optional custom scheme override"""
+        if custom_scheme:
+            schemes = self.get_enhanced_color_schemes()
+            return schemes.get(custom_scheme, schemes['Ocean Blues'])
+        
+        # Use sample-specific color variation
+        visual_params = self.map_data_to_visual(iris_sample)
+        color_variation = visual_params['color_variation']
+        
+        all_schemes = list(self.get_enhanced_color_schemes().values())
+        return all_schemes[color_variation]
 
         return visual_params
     
@@ -178,13 +246,13 @@ class FlowerVisualizer:
         """Color gradient interpolation"""
         return tuple([int(start[i] + (end[i] - start[i]) * ratio) for i in range(3)])
     
-    def draw_data_driven_flower(self, screen, iris_sample: Dict, t: int, x_offset: int = 0, y_offset: int = 0):
+    def draw_data_driven_flower(self, screen, iris_sample: Dict, t: int, x_offset: int = 0, y_offset: int = 0, custom_color_scheme: str = None):
         """Draw flower based on iris data"""
         if not iris_sample:
             return
         
         visual_params = self.map_data_to_visual(iris_sample)
-        colors = self.get_species_color_scheme(visual_params['species'])
+        colors = self.get_sample_color_scheme(iris_sample, custom_color_scheme)
         
         cx = self.center_x + x_offset
         cy = self.center_y + y_offset
@@ -236,8 +304,7 @@ class FlowerVisualizer:
                         # Fallback to regular lines if antialiasing fails
                         pygame.draw.lines(screen, current_color, False, points, 1)
         
-        # Draw center core
-        self.draw_center_core(screen, colors, t, cx, cy, base_radius // 4)
+        # Remove the center core drawing - no more center circle!
     
     def draw_center_core(self, screen, colors: Dict, t: int, cx: int, cy: int, radius: int):
         """Draw flower center core"""
@@ -272,6 +339,11 @@ class InteractiveFlowerApp:
         # UI state
         self.species_list = ['All', 'Iris-setosa', 'Iris-versicolor', 'Iris-virginica']
         self.selected_species_index = 0
+        
+        # Color scheme selection
+        self.color_schemes = list(self.visualizer.get_enhanced_color_schemes().keys())
+        self.selected_color_index = 0
+        self.custom_color_mode = False  # False = auto colors, True = manual color selection
     
     def handle_events(self):
         """Handle user input events"""
@@ -308,6 +380,20 @@ class InteractiveFlowerApp:
                     # A key: toggle auto advance
                     self.auto_advance = not self.auto_advance
                     self.auto_advance_timer = 0
+                
+                elif event.key == pygame.K_c:
+                    # C key: toggle color mode
+                    self.custom_color_mode = not self.custom_color_mode
+                
+                elif event.key == pygame.K_1:
+                    # 1 key: previous color scheme
+                    if self.custom_color_mode:
+                        self.previous_color_scheme()
+                
+                elif event.key == pygame.K_2:
+                    # 2 key: next color scheme
+                    if self.custom_color_mode:
+                        self.next_color_scheme()
         
         return True
     
@@ -372,8 +458,20 @@ class InteractiveFlowerApp:
             if self.auto_advance_timer >= self.auto_advance_delay:
                 self.next_sample()
                 self.auto_advance_timer = 0
-
-                self.auto_advance_timer = 0
+    
+    def previous_color_scheme(self):
+        """Switch to previous color scheme"""
+        self.selected_color_index = (self.selected_color_index - 1) % len(self.color_schemes)
+    
+    def next_color_scheme(self):
+        """Switch to next color scheme"""
+        self.selected_color_index = (self.selected_color_index + 1) % len(self.color_schemes)
+    
+    def get_current_color_scheme_name(self):
+        """Get current color scheme name"""
+        if self.custom_color_mode:
+            return self.color_schemes[self.selected_color_index]
+        return None
     
     def draw_ui(self, screen):
         """Draw user interface"""
@@ -433,6 +531,42 @@ class InteractiveFlowerApp:
             
             y_offset += 20
             
+            # Color scheme controls
+            color_title = self.font.render("Color Controls:", True, WHITE)
+            screen.blit(color_title, (WIDTH - 290, y_offset))
+            y_offset += 25
+            
+            mode_text = "Manual" if self.custom_color_mode else "Auto"
+            mode_color = (0, 255, 0) if self.custom_color_mode else (255, 165, 0)
+            mode_surface = self.font.render(f"Mode: {mode_text}", True, mode_color)
+            screen.blit(mode_surface, (WIDTH - 290, y_offset))
+            y_offset += 25
+            
+            if self.custom_color_mode:
+                current_scheme = self.color_schemes[self.selected_color_index]
+                scheme_surface = self.font.render(f"Theme: {current_scheme}", True, LIGHT_GRAY)
+                screen.blit(scheme_surface, (WIDTH - 290, y_offset))
+                y_offset += 25
+                
+                # Draw color preview squares
+                scheme_colors = self.visualizer.get_enhanced_color_schemes()[current_scheme]
+                preview_y = y_offset
+                for i, (color_name, color) in enumerate(scheme_colors.items()):
+                    rect_x = WIDTH - 290 + i * 35
+                    rect = pygame.Rect(rect_x, preview_y, 30, 15)
+                    pygame.draw.rect(screen, color, rect)
+                    pygame.draw.rect(screen, WHITE, rect, 1)
+                y_offset += 25
+            else:
+                auto_text = self.font.render("Auto: Each sample has", True, GRAY)
+                screen.blit(auto_text, (WIDTH - 290, y_offset))
+                y_offset += 20
+                auto_text2 = self.font.render("unique colors", True, GRAY)
+                screen.blit(auto_text2, (WIDTH - 290, y_offset))
+                y_offset += 20
+            
+            y_offset += 10
+            
             # Control instructions
             controls = [
                 "Controls:",
@@ -440,7 +574,9 @@ class InteractiveFlowerApp:
                 "←/→: Switch Sample",
                 "↑/↓: Switch Species",
                 "R: Random Sample",
-                "A: Auto Advance"
+                "A: Auto Advance",
+                "C: Toggle Color Mode",
+                "1/2: Change Color Theme"
             ]
             
             for i, control in enumerate(controls):
@@ -463,31 +599,32 @@ class InteractiveFlowerApp:
                 screen.blit(status_surface, (WIDTH - 290, y_offset))
     
     def run(self):
-        """主运行循环"""
+        """Main execution loop"""
         running = True
         
         while running:
-            # 处理事件
+            # Handle events
             running = self.handle_events()
             
-            # 更新状态
+            # Update state
             if self.is_playing:
                 self.t += 1
             
             self.update_auto_advance()
             
-            # 绘制
+            # Render
             self.screen.fill(BG_COLOR)
             
-            # 绘制当前花朵
+            # Draw current flower
             current_sample = self.iris_data.get_sample_by_index(self.current_sample_index)
             if current_sample:
-                self.visualizer.draw_data_driven_flower(self.screen, current_sample, self.t)
+                color_scheme = self.get_current_color_scheme_name()
+                self.visualizer.draw_data_driven_flower(self.screen, current_sample, self.t, 0, 0, color_scheme)
             
-            # 绘制UI
+            # Draw UI
             self.draw_ui(self.screen)
             
-            # 更新显示
+            # Update display
             pygame.display.flip()
             self.clock.tick(FPS)
         
@@ -495,12 +632,12 @@ class InteractiveFlowerApp:
         sys.exit()
 
 def main():
-    """主函数"""
+    """Main function"""
     try:
         app = InteractiveFlowerApp()
         app.run()
     except Exception as e:
-        print(f"程序运行出错: {e}")
+        print(f"Program error: {e}")
         pygame.quit()
         sys.exit(1)
 
