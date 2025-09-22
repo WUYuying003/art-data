@@ -185,22 +185,39 @@ class FlowerVisualizer:
             }
         }
     
-    def map_data_to_visual(self, iris_sample: Dict) -> Dict:
-        """Map iris data to visual parameters"""
-        normalized = iris_sample['normalized']
+    def map_data_to_visual(self, sample):
+        """Map iris data to visual parameters with beautiful variation"""
+        # Extract features from sample dict
+        if isinstance(sample, dict):
+            sepal_length = sample['sepal_length']
+            sepal_width = sample['sepal_width']
+            petal_length = sample['petal_length']
+            petal_width = sample['petal_width']
+        else:
+            sepal_length, sepal_width, petal_length, petal_width = sample
         
-        # Data mapping strategy
-        visual_params = {
-            'base_radius': 40 + int(normalized['sepal_length'] * 120),  # Sepal length → Base radius
-            'num_petals': 16 + int(normalized['sepal_width'] * 16),     # Sepal width → Number of petals
-            'amplitude': 20 + int(normalized['petal_length'] * 60),     # Petal length → Dynamic amplitude
-            'num_layers': 6 + int(normalized['petal_width'] * 12),      # Petal width → Number of layers
-            'species': iris_sample['species'],
-            # Add unique color variation based on sample ID
-            'color_variation': (iris_sample['id'] * 37) % 8  # Creates 8 different color variations
+        # Beautiful parameter mapping (restored to original elegant ranges)
+        base_radius = int(80 + sepal_length * 8)  # Range: 80-140 (elegant size)
+        num_petals = max(16, min(24, int(16 + petal_length * 2)))  # Range: 16-24 (balanced)
+        amplitude = int(40 + petal_width * 20)  # Range: 40-80 (smooth waves)
+        num_layers = max(6, min(12, int(6 + sepal_width * 2)))  # Range: 6-12 (layered beauty)
+        
+        # Add random seed for variety while keeping elegant shapes
+        import random
+        sample_seed = hash(str(sample)) % 1000  # Consistent seed per sample
+        random.seed(sample_seed)
+        
+        # Small random variations for uniqueness (but keeping elegance)
+        radius_variation = random.randint(-10, 10)
+        petal_variation = random.randint(-2, 2)
+        amplitude_variation = random.randint(-5, 5)
+        
+        return {
+            'base_radius': max(60, base_radius + radius_variation),
+            'num_petals': max(12, min(28, num_petals + petal_variation)),
+            'amplitude': max(30, amplitude + amplitude_variation),
+            'num_layers': num_layers
         }
-        
-        return visual_params
     
     def get_sample_color_scheme(self, iris_sample: Dict, custom_scheme: str = None) -> Dict[str, Tuple[int, int, int]]:
         """Get color scheme for a specific sample, with optional custom scheme override"""
@@ -250,63 +267,107 @@ class FlowerVisualizer:
         """Color gradient interpolation"""
         return tuple([int(start[i] + (end[i] - start[i]) * ratio) for i in range(3)])
     
-    def draw_data_driven_flower(self, screen, iris_sample: Dict, t: int, x_offset: int = 0, y_offset: int = 0, custom_color_scheme: str = None):
-        """Draw flower based on iris data"""
-        if not iris_sample:
-            return
+    def blend_color_schemes(self, scheme1: Dict, scheme2: Dict, ratio: float) -> Dict:
+        """Blend two color schemes smoothly with easing"""
+        # Apply smooth easing function for more natural color transitions
+        eased_ratio = ratio * ratio * (3.0 - 2.0 * ratio)  # Smoothstep function
         
-        visual_params = self.map_data_to_visual(iris_sample)
-        colors = self.get_sample_color_scheme(iris_sample, custom_color_scheme)
+        blended_scheme = {}
+        for key in scheme1:
+            if key in scheme2:
+                blended_scheme[key] = self.gradient_color(scheme1[key], scheme2[key], eased_ratio)
+            else:
+                blended_scheme[key] = scheme1[key]
+        return blended_scheme
+    
+    def draw_data_driven_flower(self, surface, x, y, params, colors, t, mouse_clicks=None, scale_factor=1.0):
+        """Draw beautiful iris flower with elegant patterns (restored original beauty)"""
+        base_radius = int(params['base_radius'] * scale_factor)
+        num_petals = params['num_petals']
+        amplitude = int(params['amplitude'] * scale_factor)
+        num_layers = params['num_layers']
         
-        cx = self.center_x + x_offset
-        cy = self.center_y + y_offset
-        
-        num_petals = visual_params['num_petals']
-        num_layers = visual_params['num_layers']
-        base_radius = visual_params['base_radius']
-        amplitude = visual_params['amplitude']
-        
-        # Draw multi-layer petals
+        # Draw multi-layer petals with original beautiful patterns
         for layer in range(num_layers):
             layer_ratio = layer / (num_layers - 1) if num_layers > 1 else 0
             
-            # Dynamic radius calculation
+            # Elegant dynamic radius calculation (restored)
             dynamic_radius = base_radius + layer * 15
             dynamic_radius += int(amplitude * 0.3 * math.sin(t * 0.08 + layer))
             dynamic_radius += int(amplitude * 0.2 * math.cos(t * 0.06 + layer * 0.5))
             
-            # Get current layer color
-            current_color = self.get_dynamic_color(colors, t + layer * 10, layer_ratio)
+            # Get current layer color with mouse interaction effects
+            color_time_offset = t + layer * 10
             
-            # Draw petals
+            # Add mouse click color effects
+            if mouse_clicks:
+                for click in mouse_clicks:
+                    # Calculate distance from flower center to click
+                    center_dist = math.sqrt((x - click['x'])**2 + (y - click['y'])**2)
+                    if center_dist < 300:  # Color effect radius
+                        # Add time-based color shift based on click
+                        click_color_offset = click['strength'] * 20 * math.sin((t - click['time']) * 0.1)
+                        color_time_offset += click_color_offset
+            
+            current_color = self.get_dynamic_color(colors, color_time_offset, layer_ratio)
+            
+            # Draw beautiful petals (restored original elegance)
             for petal in range(num_petals):
                 angle = 2 * math.pi * petal / num_petals + t * 0.02 + layer * 0.1
                 
                 points = []
-                for i in range(120):  # Reduced points for better performance
+                for i in range(120):
                     theta = angle + math.pi * i / 120
                     
-                    # Petal shape calculation
+                    # Beautiful petal shape calculation (restored)
                     r = dynamic_radius
                     r += int(amplitude * 0.4 * math.sin(6 * theta + t * 0.05 + layer))
                     r -= int(amplitude * 0.2 * math.cos(3 * theta + t * 0.03 + layer))
                     r += int(amplitude * 0.3 * math.sin(9 * theta + t * 0.02))
                     
-                    # Tidal effect (data-based dynamic variation)
+                    # Elegant tidal effect (restored)
                     tidal_phase = t * 0.05 + layer * 0.02 + angle
                     tidal_effect = amplitude * 0.5 * math.sin(tidal_phase)
                     r += int(tidal_effect)
                     
-                    x = cx + r * math.cos(theta + layer * 0.03)
-                    y = cy + r * math.sin(theta + layer * 0.03)
-                    points.append((x, y))
+                    # Mouse interaction effects
+                    if mouse_clicks:
+                        for click in mouse_clicks:
+                            # Calculate position for this point
+                            point_x = x + r * math.cos(theta + layer * 0.03)
+                            point_y = y + r * math.sin(theta + layer * 0.03)
+                            
+                            # Calculate distance from click
+                            dist = math.sqrt((point_x - click['x'])**2 + (point_y - click['y'])**2)
+                            
+                            # Apply deformation based on distance and click strength
+                            if dist < 200:  # Effect radius
+                                effect_strength = click['strength'] * (1 - dist / 200)
+                                
+                                # Create more dramatic ripple effect with faster animation
+                                ripple_speed = 5  # Faster ripple propagation
+                                ripple = math.sin((dist - (t - click['time']) * ripple_speed) * 0.15) * effect_strength
+                                r += int(50 * ripple)  # Stronger ripple effect
+                                
+                                # Add more pronounced spiral distortion with faster decay
+                                spiral_speed = 0.15  # Faster spiral animation
+                                spiral_offset = effect_strength * 0.5 * math.sin(theta * 4 + (t - click['time']) * spiral_speed)
+                                r += int(35 * spiral_offset)  # Stronger spiral effect
+                                
+                                # Add pulsing effect for more dynamic appearance
+                                pulse = effect_strength * 0.3 * math.sin((t - click['time']) * 0.2)
+                                r += int(25 * pulse)
+                    
+                    px = x + r * math.cos(theta + layer * 0.03)
+                    py = y + r * math.sin(theta + layer * 0.03)
+                    points.append((px, py))
                 
                 if len(points) > 2:
                     try:
-                        pygame.draw.aalines(screen, current_color, False, points, 1)
+                        pygame.draw.aalines(surface, current_color, False, points, 1)
                     except:
                         # Fallback to regular lines if antialiasing fails
-                        pygame.draw.lines(screen, current_color, False, points, 1)
+                        pygame.draw.lines(surface, current_color, False, points, 1)
         
         # Remove the center core drawing - no more center circle!
     
@@ -322,7 +383,9 @@ class InteractiveFlowerApp:
     
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        self.width = WIDTH
+        self.height = HEIGHT
+        self.screen = pygame.display.set_mode((self.width, self.height))
         pygame.display.set_caption("Data-Driven Ocean Flowers - Iris Dataset Visualization")
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(None, FONT_SIZE)
@@ -347,14 +410,34 @@ class InteractiveFlowerApp:
         # Color scheme selection
         self.color_schemes = list(self.visualizer.get_enhanced_color_schemes().keys())
         self.selected_color_index = 0
-        self.custom_color_mode = False  # False = auto colors, True = manual color selection
+        self.custom_color_mode = True  # Start in manual mode so users can see color switching
+        self.color_change_offset = 0  # Color animation offset for smooth transitions
         
         # Video recording
         self.is_recording = False
         self.video_writer = None
         self.video_frames = []
-        self.recording_duration = 300  # 5 seconds at 60 FPS
+        self.recording_duration = 3600  # 60 seconds at 60 FPS (1 minute)
         self.recording_frame_count = 0
+        
+        # Mouse interaction
+        self.mouse_clicks = []  # Store recent mouse clicks
+        self.click_effects = []  # Store active click effects
+        self.max_click_history = 10  # Maximum number of clicks to remember
+        self.click_effect_duration = 60  # 1 second at 60 FPS (faster visual effect)
+        self.click_deform_duration = 120  # 2 seconds at 60 FPS (faster deformation recovery)
+        
+        # Auto scaling animation
+        self.scale_animation_speed = 0.06  # Slightly slower for smoother breathing (was 0.08)
+        self.scale_range = 0.25  # Slightly smaller range for more natural breathing (was 0.3)
+        
+        # Auto color cycling with smooth transitions
+        self.auto_color_cycle_speed = 0.008  # Faster color cycling (was 0.002)
+        self.color_cycle_timer = 0
+        self.color_transition_progress = 0.0  # 0.0 to 1.0 for smooth color blending
+        self.color_transition_speed = 0.025  # Faster color transition (was 0.01)
+        self.is_transitioning_color = False
+        self.target_color_index = 0
     
     def handle_events(self):
         """Handle user input events"""
@@ -364,15 +447,15 @@ class InteractiveFlowerApp:
             
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    # Space: pause/resume
-                    self.is_playing = not self.is_playing
+                    # Space: switch to next color scheme
+                    self.next_color_scheme()
                 
                 elif event.key == pygame.K_LEFT:
                     # Left arrow: previous sample
                     self.previous_sample()
                 
                 elif event.key == pygame.K_RIGHT:
-                    # Right arrow: next sample
+                    # Right arrow: next sample  
                     self.next_sample()
                 
                 elif event.key == pygame.K_UP:
@@ -409,11 +492,24 @@ class InteractiveFlowerApp:
                 elif event.key == pygame.K_v:
                     # V key: start/stop video recording
                     self.toggle_video_recording()
+                
+                elif event.key == pygame.K_x:
+                    # X key: clear all mouse effects
+                    self.clear_mouse_effects()
+            
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:  # Left mouse button
+                    self.handle_mouse_click(event.pos)
         
         return True
     
     def previous_sample(self):
         """Switch to previous sample"""
+        # Clear mouse interaction effects when switching samples
+        self.clear_mouse_effects()
+        # Trigger subtle color change animation
+        self.color_change_offset += 10
+        
         if self.current_species_filter:
             samples = self.iris_data.get_species_samples(self.current_species_filter)
             if samples:
@@ -426,6 +522,11 @@ class InteractiveFlowerApp:
     
     def next_sample(self):
         """Switch to next sample"""
+        # Clear mouse interaction effects when switching samples
+        self.clear_mouse_effects()
+        # Trigger subtle color change animation
+        self.color_change_offset += 10
+        
         if self.current_species_filter:
             samples = self.iris_data.get_species_samples(self.current_species_filter)
             if samples:
@@ -448,6 +549,9 @@ class InteractiveFlowerApp:
     
     def update_species_filter(self):
         """Update species filter"""
+        # Clear mouse interaction effects when switching species
+        self.clear_mouse_effects()
+        
         selected_species = self.species_list[self.selected_species_index]
         if selected_species == 'All':
             self.current_species_filter = None
@@ -460,6 +564,9 @@ class InteractiveFlowerApp:
     
     def random_sample(self):
         """Randomly select sample"""
+        # Clear mouse interaction effects when switching to random sample
+        self.clear_mouse_effects()
+        
         if self.current_species_filter:
             sample = self.iris_data.get_random_sample(self.current_species_filter)
         else:
@@ -477,16 +584,26 @@ class InteractiveFlowerApp:
     def previous_color_scheme(self):
         """Switch to previous color scheme"""
         self.selected_color_index = (self.selected_color_index - 1) % len(self.color_schemes)
+        # Enable custom color mode when manually switching
+        self.custom_color_mode = True
+        # Trigger moderate color change animation
+        self.color_change_offset += 25
     
     def next_color_scheme(self):
         """Switch to next color scheme"""
         self.selected_color_index = (self.selected_color_index + 1) % len(self.color_schemes)
+        # Enable custom color mode when manually switching
+        self.custom_color_mode = True
+        # Trigger moderate color change animation
+        self.color_change_offset += 25
     
     def get_current_color_scheme_name(self):
         """Get current color scheme name"""
         if self.custom_color_mode:
             return self.color_schemes[self.selected_color_index]
-        return None
+        else:
+            # In auto mode, use the first color scheme as default
+            return self.color_schemes[0] if self.color_schemes else "Ocean Depths"
     
     def toggle_video_recording(self):
         """Start or stop video recording"""
@@ -556,6 +673,87 @@ class InteractiveFlowerApp:
             # Auto-stop after recording_duration frames
             if self.recording_frame_count >= self.recording_duration:
                 self.stop_video_recording()
+    
+    def handle_mouse_click(self, pos):
+        """Handle mouse click and create visual effect"""
+        x, y = pos
+        
+        # Only respond to clicks in the main visualization area (not UI)
+        if x < WIDTH - 300:
+            click_effect = {
+                'x': x,
+                'y': y,
+                'age': 0,
+                'intensity': 1.0,
+                'radius': 0
+            }
+            self.click_effects.append(click_effect)
+            
+            # Store click for flower deformation
+            click_data = {
+                'x': x,
+                'y': y,
+                'time': self.t,
+                'strength': 1.0
+            }
+            self.mouse_clicks.append(click_data)
+            
+            # Trigger subtle color change animation on click (not full scheme change)
+            self.color_change_offset += 5
+            
+            # Don't auto-switch color scheme on click to avoid lag
+            
+            # Remove old clicks
+            if len(self.mouse_clicks) > self.max_click_history:
+                self.mouse_clicks.pop(0)
+    
+    def update_click_effects(self):
+        """Update and age click effects"""
+        for effect in self.click_effects[:]:  # Copy list to safely modify during iteration
+            effect['age'] += 1
+            effect['intensity'] = 1.0 - (effect['age'] / self.click_effect_duration)
+            effect['radius'] = effect['age'] * 2
+            
+            # Remove expired effects
+            if effect['age'] >= self.click_effect_duration:
+                self.click_effects.remove(effect)
+        
+        # Age mouse clicks
+        for click in self.mouse_clicks[:]:
+            click['strength'] = max(0, 1.0 - (self.t - click['time']) / self.click_deform_duration)  # Faster decay
+            if click['strength'] <= 0:
+                self.mouse_clicks.remove(click)
+    
+    def clear_mouse_effects(self):
+        """Clear all mouse interaction effects"""
+        self.mouse_clicks.clear()
+        self.click_effects.clear()
+    
+    def draw_click_effects(self, screen):
+        """Draw visual effects from mouse clicks"""
+        for effect in self.click_effects:
+            if effect['intensity'] > 0:
+                # Draw expanding circle
+                alpha = int(255 * effect['intensity'])
+                color = (255, 255, 255, alpha)
+                
+                # Create a surface with per-pixel alpha
+                effect_surface = pygame.Surface((effect['radius'] * 2, effect['radius'] * 2), pygame.SRCALPHA)
+                
+                # Draw outer ring
+                if effect['radius'] > 5:
+                    pygame.draw.circle(effect_surface, (*color[:3], alpha//2), 
+                                     (effect['radius'], effect['radius']), 
+                                     int(effect['radius']), 3)
+                
+                # Draw inner glow
+                if effect['radius'] > 2:
+                    pygame.draw.circle(effect_surface, (*color[:3], alpha//4), 
+                                     (effect['radius'], effect['radius']), 
+                                     int(effect['radius']//2))
+                
+                # Blit to screen
+                screen.blit(effect_surface, (effect['x'] - effect['radius'], effect['y'] - effect['radius']))
     
     def draw_ui(self, screen):
         """Draw user interface"""
@@ -661,7 +859,9 @@ class InteractiveFlowerApp:
                 "A: Auto Advance",
                 "C: Toggle Color Mode",
                 "1/2: Change Color Theme",
-                "V: Record Video (5s)"
+                "V: Record Video (5s)",
+                "Mouse: Click to deform",
+                "X: Clear deformations"
             ]
             
             for i, control in enumerate(controls):
@@ -699,16 +899,71 @@ class InteractiveFlowerApp:
             if self.is_playing:
                 self.t += 1
             
+            # Gradually reduce color change offset for smooth transition (faster recovery)
+            if self.color_change_offset > 0:
+                self.color_change_offset = max(0, self.color_change_offset - 2)
+            
+            # Auto color cycling with smooth transitions
+            self.color_cycle_timer += self.auto_color_cycle_speed
+            if self.color_cycle_timer >= 1.0 and not self.is_transitioning_color:
+                # Start transition to next color scheme
+                self.is_transitioning_color = True
+                self.target_color_index = (self.selected_color_index + 1) % len(self.color_schemes)
+                self.color_transition_progress = 0.0
+                self.color_cycle_timer = 0
+            
+            # Handle smooth color transition
+            if self.is_transitioning_color:
+                self.color_transition_progress += self.color_transition_speed
+                if self.color_transition_progress >= 1.0:
+                    # Transition complete
+                    self.selected_color_index = self.target_color_index
+                    self.is_transitioning_color = False
+                    self.color_transition_progress = 0.0
+            
             self.update_auto_advance()
+            
+            # Update click effects
+            self.update_click_effects()
             
             # Render
             self.screen.fill(BG_COLOR)
             
-            # Draw current flower
+            # Draw current flower with mouse interaction
             current_sample = self.iris_data.get_sample_by_index(self.current_sample_index)
             if current_sample:
-                color_scheme = self.get_current_color_scheme_name()
-                self.visualizer.draw_data_driven_flower(self.screen, current_sample, self.t, 0, 0, color_scheme)
+                # Get color scheme with smooth transitions
+                all_schemes = self.visualizer.get_enhanced_color_schemes()
+                current_scheme_name = self.color_schemes[self.selected_color_index]
+                colors = all_schemes[current_scheme_name]
+                
+                # Apply smooth color transition if in progress
+                if self.is_transitioning_color:
+                    target_scheme_name = self.color_schemes[self.target_color_index]
+                    target_colors = all_schemes[target_scheme_name]
+                    colors = self.visualizer.blend_color_schemes(colors, target_colors, self.color_transition_progress)
+                
+                # Map sample data to visual parameters
+                visual_params = self.visualizer.map_data_to_visual(current_sample)
+                
+                # Center the flower in the left display area (not entire screen)
+                display_area_width = self.width - 300  # Left area excluding UI panel
+                center_x = display_area_width // 2
+                center_y = self.height // 2
+                
+                # Calculate smoother auto scaling factor (breathing effect using cosine for smoothness)
+                breathing_cycle = self.t * self.scale_animation_speed
+                # Use cosine for smoother breathing, with easing function
+                raw_scale = math.cos(breathing_cycle)
+                # Apply easing function for even smoother transitions
+                eased_scale = raw_scale * raw_scale * raw_scale  # Cubic easing
+                scale_factor = 1.0 + self.scale_range * eased_scale
+                
+                # Pass color change offset, mouse data, and scale factor for animation
+                self.visualizer.draw_data_driven_flower(self.screen, center_x, center_y, visual_params, colors, self.t + self.color_change_offset, self.mouse_clicks, scale_factor)
+            
+            # Draw click effects
+            self.draw_click_effects(self.screen)
             
             # Draw UI
             self.draw_ui(self.screen)
@@ -734,7 +989,10 @@ def main():
         app = InteractiveFlowerApp()
         app.run()
     except Exception as e:
+        import traceback
         print(f"Program error: {e}")
+        print("Detailed traceback:")
+        traceback.print_exc()
         pygame.quit()
         sys.exit(1)
 
