@@ -1,8 +1,10 @@
 
 
-
-# Data-Driven Ocean Flower Art Generator
-# Interactive visualization of Iris dataset as beautiful, ocean-inspired flowers using pygame
+"""
+Data-Driven Breathing Flower Art Generator
+Interactive visualization of the Iris dataset as beautiful, breathing flowers using pygame.
+All code and comments are in English for international sharing and GitHub compliance.
+"""
 
 import pygame
 import math
@@ -457,52 +459,41 @@ class InteractiveFlowerApp:
             
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    # Space: switch to next color scheme
-                    self.next_color_scheme()
-                
+                    # Space: Pause/Resume animation
+                    self.is_playing = not self.is_playing
                 elif event.key == pygame.K_LEFT:
                     # Left arrow: previous sample
                     self.previous_sample()
-                
                 elif event.key == pygame.K_RIGHT:
-                    # Right arrow: next sample  
+                    # Right arrow: next sample
                     self.next_sample()
-                
                 elif event.key == pygame.K_UP:
                     # Up arrow: previous species
                     self.previous_species()
-                
                 elif event.key == pygame.K_DOWN:
                     # Down arrow: next species
                     self.next_species()
-                
                 elif event.key == pygame.K_r:
                     # R key: random sample
                     self.random_sample()
-                
                 elif event.key == pygame.K_a:
                     # A key: toggle auto advance
                     self.auto_advance = not self.auto_advance
                     self.auto_advance_timer = 0
-                
                 elif event.key == pygame.K_c:
                     # C key: toggle color mode
                     self.custom_color_mode = not self.custom_color_mode
-                
                 elif event.key == pygame.K_1:
                     # 1 key: previous color scheme
                     if self.custom_color_mode:
                         self.previous_color_scheme()
-                
                 elif event.key == pygame.K_2:
                     # 2 key: next color scheme
                     if self.custom_color_mode:
                         self.next_color_scheme()
-                
                 elif event.key == pygame.K_v:
                     # V key: start/stop video recording
                     self.toggle_video_recording()
-                
                 elif event.key == pygame.K_x:
                     # X key: clear all mouse effects
                     self.clear_mouse_effects()
