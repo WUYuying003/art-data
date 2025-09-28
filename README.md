@@ -3,6 +3,12 @@
 
 This project is an innovative interactive data visualization artwork that transforms the classic Iris dataset into beautiful breathing flower art. Implemented with Python and pygame, it demonstrates how to convert abstract data into intuitive, beautiful, and interactive visual art.
 
+## 🌸 Live Demo
+
+![Breathing Flower Animation](new_breathing_flower.gif)
+
+*Interactive breathing flower visualization showing mouse-triggered color transitions and deformation effects*
+
 ## 🎨 Project Features
 
 ### Data Visualization Principles
