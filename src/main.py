@@ -235,11 +235,11 @@ class FlowerVisualizer:
         return visual_params
     
     def get_dynamic_color(self, colors: Dict, t: int, layer_ratio: float) -> Tuple[int, int, int]:
-        """Get dynamically changing color"""
-        # Color blending based on time and layer
+        """Get dynamically changing color within the current color scheme"""
+        # Color blending based on time and layer - restored beautiful color cycling
         time_cycle = (t * 0.01) % 1
         
-        # Cycle through different colors over time
+        # Cycle through different colors over time within the current color scheme
         if time_cycle < 0.25:
             # Primary to secondary
             ratio = time_cycle * 4
@@ -257,7 +257,7 @@ class FlowerVisualizer:
             ratio = (time_cycle - 0.75) * 4
             color = self.gradient_color(colors['highlight'], colors['primary'], ratio)
         
-        # Add layer variation
+        # Add layer variation for depth
         layer_intensity = 1.0 - layer_ratio * 0.3
         color = tuple([int(c * layer_intensity) for c in color])
         
@@ -296,17 +296,17 @@ class FlowerVisualizer:
             dynamic_radius += int(amplitude * 0.3 * math.sin(t * 0.08 + layer))
             dynamic_radius += int(amplitude * 0.2 * math.cos(t * 0.06 + layer * 0.5))
             
-            # Get current layer color with mouse interaction effects
-            color_time_offset = t + layer * 10
+            # Get current layer color with enhanced mouse interaction effects
+            color_time_offset = t + layer * 10  # Restore layer-based color variation
             
-            # Add mouse click color effects
+            # Add mouse click color effects with enhanced visual feedback
             if mouse_clicks:
                 for click in mouse_clicks:
                     # Calculate distance from flower center to click
                     center_dist = math.sqrt((x - click['x'])**2 + (y - click['y'])**2)
                     if center_dist < 300:  # Color effect radius
-                        # Add time-based color shift based on click
-                        click_color_offset = click['strength'] * 20 * math.sin((t - click['time']) * 0.1)
+                        # Add time-based color shift based on click - enhanced effect
+                        click_color_offset = click['strength'] * 15 * math.sin((t - click['time']) * 0.08)
                         color_time_offset += click_color_offset
             
             current_color = self.get_dynamic_color(colors, color_time_offset, layer_ratio)
@@ -427,17 +427,27 @@ class InteractiveFlowerApp:
         self.click_effect_duration = 60  # 1 second at 60 FPS (faster visual effect)
         self.click_deform_duration = 120  # 2 seconds at 60 FPS (faster deformation recovery)
         
+        # Color transition system triggered by mouse clicks
+        self.color_transition_active = False
+        self.color_transition_progress = 0.0
+        self.color_transition_speed = 0.015  # Slower for smoother gradient
+        self.current_colors = None
+        self.target_colors = None
+        self.color_transition_duration = 180  # 3 seconds at 60 FPS for gradual color change
+        
         # Auto scaling animation
         self.scale_animation_speed = 0.06  # Slightly slower for smoother breathing (was 0.08)
         self.scale_range = 0.25  # Slightly smaller range for more natural breathing (was 0.3)
         
-        # Auto color cycling with smooth transitions
-        self.auto_color_cycle_speed = 0.008  # Faster color cycling (was 0.002)
-        self.color_cycle_timer = 0
-        self.color_transition_progress = 0.0  # 0.0 to 1.0 for smooth color blending
-        self.color_transition_speed = 0.025  # Faster color transition (was 0.01)
-        self.is_transitioning_color = False
-        self.target_color_index = 0
+        # Initialize color system
+        self.initialize_color_system()
+    
+    def initialize_color_system(self):
+        """Initialize the color system with starting colors"""
+        all_schemes = self.visualizer.get_enhanced_color_schemes()
+        current_scheme_name = self.color_schemes[self.selected_color_index]
+        self.current_colors = all_schemes[current_scheme_name].copy()
+        self.target_colors = self.current_colors.copy()
     
     def handle_events(self):
         """Handle user input events"""
@@ -507,8 +517,6 @@ class InteractiveFlowerApp:
         """Switch to previous sample"""
         # Clear mouse interaction effects when switching samples
         self.clear_mouse_effects()
-        # Trigger subtle color change animation
-        self.color_change_offset += 10
         
         if self.current_species_filter:
             samples = self.iris_data.get_species_samples(self.current_species_filter)
@@ -524,8 +532,6 @@ class InteractiveFlowerApp:
         """Switch to next sample"""
         # Clear mouse interaction effects when switching samples
         self.clear_mouse_effects()
-        # Trigger subtle color change animation
-        self.color_change_offset += 10
         
         if self.current_species_filter:
             samples = self.iris_data.get_species_samples(self.current_species_filter)
@@ -586,16 +592,16 @@ class InteractiveFlowerApp:
         self.selected_color_index = (self.selected_color_index - 1) % len(self.color_schemes)
         # Enable custom color mode when manually switching
         self.custom_color_mode = True
-        # Trigger moderate color change animation
-        self.color_change_offset += 25
+        # Start color transition to the selected scheme
+        self.start_color_transition(target_index=self.selected_color_index)
     
     def next_color_scheme(self):
         """Switch to next color scheme"""
         self.selected_color_index = (self.selected_color_index + 1) % len(self.color_schemes)
         # Enable custom color mode when manually switching
         self.custom_color_mode = True
-        # Trigger moderate color change animation
-        self.color_change_offset += 25
+        # Start color transition to the selected scheme
+        self.start_color_transition(target_index=self.selected_color_index)
     
     def get_current_color_scheme_name(self):
         """Get current color scheme name"""
@@ -675,7 +681,7 @@ class InteractiveFlowerApp:
                 self.stop_video_recording()
     
     def handle_mouse_click(self, pos):
-        """Handle mouse click and create visual effect"""
+        """Handle mouse click and create visual effect with color transition"""
         x, y = pos
         
         # Only respond to clicks in the main visualization area (not UI)
@@ -698,14 +704,56 @@ class InteractiveFlowerApp:
             }
             self.mouse_clicks.append(click_data)
             
-            # Trigger subtle color change animation on click (not full scheme change)
-            self.color_change_offset += 5
-            
-            # Don't auto-switch color scheme on click to avoid lag
+            # Trigger color transition to next color scheme
+            self.start_color_transition()
             
             # Remove old clicks
             if len(self.mouse_clicks) > self.max_click_history:
                 self.mouse_clicks.pop(0)
+    
+    def start_color_transition(self, target_index=None):
+        """Start a smooth color transition to the next color scheme or specified index"""
+        if not self.color_transition_active:  # Don't start new transition if one is already in progress
+            if target_index is None:
+                # Move to next color scheme (for mouse clicks)
+                self.selected_color_index = (self.selected_color_index + 1) % len(self.color_schemes)
+            # If target_index is specified, use current selected_color_index (for manual switches)
+            
+            # Set up transition
+            all_schemes = self.visualizer.get_enhanced_color_schemes()
+            new_scheme_name = self.color_schemes[self.selected_color_index]
+            self.target_colors = all_schemes[new_scheme_name].copy()
+            
+            # Start transition
+            self.color_transition_active = True
+            self.color_transition_progress = 0.0
+    
+    def update_color_transition(self):
+        """Update the gradual color transition between color schemes"""
+        if self.color_transition_active:
+            self.color_transition_progress += self.color_transition_speed
+            
+            # Apply easing function for smoother transition
+            eased_progress = self.color_transition_progress * self.color_transition_progress * (3.0 - 2.0 * self.color_transition_progress)
+            
+            # Blend color schemes (not individual colors, but entire schemes)
+            blended_colors = {}
+            for key in self.current_colors:
+                if key in self.target_colors:
+                    start_color = self.current_colors[key]
+                    end_color = self.target_colors[key]
+                    blended_colors[key] = self.visualizer.gradient_color(start_color, end_color, eased_progress)
+                else:
+                    blended_colors[key] = self.current_colors[key]
+            
+            # Update current colors with blended result - this becomes the base color scheme
+            self.current_colors = blended_colors
+            
+            # Check if transition is complete
+            if self.color_transition_progress >= 1.0:
+                self.color_transition_active = False
+                self.color_transition_progress = 0.0
+                self.current_colors = self.target_colors.copy()
     
     def update_click_effects(self):
         """Update and age click effects"""
@@ -860,6 +908,7 @@ class InteractiveFlowerApp:
                 "C: Toggle Color Mode",
                 "1/2: Change Color Theme",
                 "V: Record Video (5s)",
+                "Click: Switch color scheme",
                 "Mouse: Click to deform",
                 "X: Clear deformations"
             ]
@@ -899,27 +948,8 @@ class InteractiveFlowerApp:
             if self.is_playing:
                 self.t += 1
             
-            # Gradually reduce color change offset for smooth transition (faster recovery)
-            if self.color_change_offset > 0:
-                self.color_change_offset = max(0, self.color_change_offset - 2)
-            
-            # Auto color cycling with smooth transitions
-            self.color_cycle_timer += self.auto_color_cycle_speed
-            if self.color_cycle_timer >= 1.0 and not self.is_transitioning_color:
-                # Start transition to next color scheme
-                self.is_transitioning_color = True
-                self.target_color_index = (self.selected_color_index + 1) % len(self.color_schemes)
-                self.color_transition_progress = 0.0
-                self.color_cycle_timer = 0
-            
-            # Handle smooth color transition
-            if self.is_transitioning_color:
-                self.color_transition_progress += self.color_transition_speed
-                if self.color_transition_progress >= 1.0:
-                    # Transition complete
-                    self.selected_color_index = self.target_color_index
-                    self.is_transitioning_color = False
-                    self.color_transition_progress = 0.0
+            # Update color transition system
+            self.update_color_transition()
             
             self.update_auto_advance()
             
@@ -932,16 +962,9 @@ class InteractiveFlowerApp:
             # Draw current flower with mouse interaction
             current_sample = self.iris_data.get_sample_by_index(self.current_sample_index)
             if current_sample:
-                # Get color scheme with smooth transitions
-                all_schemes = self.visualizer.get_enhanced_color_schemes()
-                current_scheme_name = self.color_schemes[self.selected_color_index]
-                colors = all_schemes[current_scheme_name]
-                
-                # Apply smooth color transition if in progress
-                if self.is_transitioning_color:
-                    target_scheme_name = self.color_schemes[self.target_color_index]
-                    target_colors = all_schemes[target_scheme_name]
-                    colors = self.visualizer.blend_color_schemes(colors, target_colors, self.color_transition_progress)
+                # Use current transitioning colors as the base color scheme
+                # The get_dynamic_color method will create color variations within this scheme
+                colors = self.current_colors
                 
                 # Map sample data to visual parameters
                 visual_params = self.visualizer.map_data_to_visual(current_sample)
@@ -959,8 +982,8 @@ class InteractiveFlowerApp:
                 eased_scale = raw_scale * raw_scale * raw_scale  # Cubic easing
                 scale_factor = 1.0 + self.scale_range * eased_scale
                 
-                # Pass color change offset, mouse data, and scale factor for animation
-                self.visualizer.draw_data_driven_flower(self.screen, center_x, center_y, visual_params, colors, self.t + self.color_change_offset, self.mouse_clicks, scale_factor)
+                # Pass mouse data and scale factor for animation
+                self.visualizer.draw_data_driven_flower(self.screen, center_x, center_y, visual_params, colors, self.t, self.mouse_clicks, scale_factor)
             
             # Draw click effects
             self.draw_click_effects(self.screen)
