@@ -1,8 +1,8 @@
-# Project Showcase - Iris Data Visualization Art System
+# Project Showcase - Iris Data Visualization Breathing Flower System
 
 ## 🎯 Project Overview
 
-This project is an innovative **Interactive Data Visualization System** that transforms the classic machine learning dataset (Iris dataset) into beautiful ocean-style artwork. The project perfectly combines **Data Science**, **Computer Graphics**, and **Interaction Design**, showcasing cutting-edge data visualization technologies.
+This project is an innovative **Interactive Data Visualization System** that transforms the classic machine learning dataset (Iris dataset) into beautiful breathing flower artwork. The project perfectly combines **Data Science**, **Computer Graphics**, and **Interaction Design**, showcasing cutting-edge data visualization technologies.
 
 ## 📊 Core Data Visualization Technologies
 
@@ -43,7 +43,7 @@ Each theme contains 4 related colors, creating rich color hierarchies.
 ### 2. Multi-layered Visual Feedback System
 1. **Color Level**: Smooth color scheme transitions
 2. **Shape Level**: Ripple and spiral deformation effects
-3. **Animation Level**: Continuous breathing and tidal animations
+3. **Animation Level**: Continuous breathing and organic animations
 4. **Information Level**: Real-time data panel updates
 
 ## 🔧 Technical Architecture Advantages
@@ -94,7 +94,7 @@ Color Transition System:
 ### 1. Perfect Fusion of Art and Data
 Unlike traditional static visualizations like bar charts and scatter plots, this project transforms data into:
 - **Dynamic Biological Forms** (flowers)
-- **Flowing Natural Phenomena** (ocean tides)
+- **Organic Breathing Animation** (scaling and movement)
 - **Rich Color Variations** (8 theme color schemes)
 
 ### 2. Multi-sensory Interactive Experience
@@ -149,7 +149,7 @@ This project perfectly demonstrates that **Data Visualization** is not just info
 - **Temporal Color Mapping**: Time-based color cycling within each theme
 
 ### Physics-Based Interactions
-- **Wave Propagation Model**: Realistic ripple spreading based on wave physics
+- **Wave Propagation Model**: Realistic ripple spreading based on organic movement
 - **Elastic Deformation**: Spring-based recovery animations
 - **Force Field Simulation**: Mouse influence as gravitational-like effects
 

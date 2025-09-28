@@ -1,7 +1,7 @@
-# Data-Driven Ocean Flower Art Generator
+# Data-Driven Breathing Flower Art Generator
 ## Interactive Iris Dataset Visualization
 
-This project is an innovative interactive data visualization artwork that transforms the classic Iris dataset into beautiful ocean-style flower art. Implemented with Python and pygame, it demonstrates how to convert abstract data into intuitive, beautiful, and interactive visual art.
+This project is an innovative interactive data visualization artwork that transforms the classic Iris dataset into beautiful breathing flower art. Implemented with Python and pygame, it demonstrates how to convert abstract data into intuitive, beautiful, and interactive visual art.
 
 ## 🎨 Project Features
 
@@ -18,7 +18,7 @@ This project is an innovative interactive data visualization artwork that transf
 ### Interactive Features
 1. **Mouse Click Interaction**
    - **Color System Switching**: Click anywhere on the flower to trigger smooth color theme transitions (Blue→Orange→Green→Purple, etc. across 8 themes)
-   - **Dynamic Deformation Effects**: Clicks create ripple and spiral deformation effects, simulating ocean wave patterns
+   - **Dynamic Deformation Effects**: Clicks create ripple and spiral deformation effects, simulating organic breathing and movement
    - **Gradient Animation**: Color transitions use 3-second smooth transitions with easing functions
 
 2. **Keyboard Controls**
@@ -33,10 +33,8 @@ This project is an innovative interactive data visualization artwork that transf
 ### Visual Art Effects
 - **Multi-layer Petal Rendering**: Each flower consists of 6-12 petal layers, creating depth and dimension
 - **Dynamic Color Cycling**: Each color theme contains 4 related colors (primary, secondary, accent, highlight) for continuous color variation
-- **Ocean-style Animation**: 
-  - Tidal Effects: Simulating periodic oceanic tidal changes
-  - Breathing Animation: Overall flower scaling animation mimicking biological breathing
-  - Ripple Propagation: Wave spreading effects after clicks
+- **Breathing Animation**: Overall flower scaling animation mimicking biological breathing
+- **Ripple Propagation**: Wave spreading effects after clicks
 
 ## 🛠 Technical Implementation
 
@@ -84,8 +82,8 @@ art-data/
 │   └── main.py              # Main program file
 ├── Iris data.csv            # Iris dataset
 ├── videos/                  # Directory for recorded video files
-├── ocean_flower.gif         # Demo animation
-└── README.md               # Project documentation
+├── breathing_flower.gif     # Demo animation
+└── README.md                # Project documentation
 ```
 
 ## 🎯 Educational Value
@@ -104,7 +102,7 @@ art-data/
 ### Art and Science Integration
 - **Generative Art**: Data-based artistic creation
 - **Aesthetic Design**: Color theory and visual design principles
-- **Natural Simulation**: Digital representation of oceanic and botanical forms
+- **Natural Simulation**: Digital representation of botanical forms and breathing motion
 
 ## 🌟 Innovation Points
 
